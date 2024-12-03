@@ -20,3 +20,21 @@
 #'   ...
 #' }
 #' @source <https://publications.gc.ca/site/fra/9.871429/publication.html>
+
+
+#' @title Commercial A and B values
+#' @name commercial_ab
+#' @aliases commercial_ab
+#' @description A subset of A and B values for 4X cod in 2024.
+#'
+#'
+#' @format A data frame with 4 rows and 4 columns:
+#' \describe{
+#'   \item{spec}{species code as used on the survey}
+#'   \item{stock}{stock name}
+#'   \item{sex}{sex code - if 4, grouped}
+#'   \item{quarter}{quarter}
+#'   \item{length_weight_a}{a value}
+#'   \item{length_weight_b}{b value}
+#'   ...
+#' }
