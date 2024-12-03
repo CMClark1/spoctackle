@@ -7,7 +7,7 @@
 calc_weight_ab(data = NULL, ab_file = spoctackle::survey_ab)
 }
 \arguments{
-\item{data}{A dataframe containing columns for species code, sex, survey season, and length}
+\item{data}{A dataframe containing columns for species code, sex, survey season, and length in the format that they are used in the survey database (SPEC,FSEX,SEASON,FLEN)}
 
 \item{ab_file}{A dataframe containing the survey a and b values}
 }

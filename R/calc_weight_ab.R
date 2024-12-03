@@ -8,7 +8,7 @@
 #'
 
 calc_weight_ab <- function(data = NULL, ab_file = spoctackle::survey_ab) {
-  data$SEASON <- tolower(data$SEASON)
+  data$SEASON <- base::tolower(data$SEASON)
   sex_stratified <- data |>
     janitor::clean_names() |>
     dplyr::rename("code" = "spec", "sex" = "fsex") |>
@@ -18,7 +18,8 @@ calc_weight_ab <- function(data = NULL, ab_file = spoctackle::survey_ab) {
       weight_ab = length_weight_a * (flen^length_weight_b),
       sex_stratified_ab = TRUE
     ) |>
-    dplyr::select(-n, -length_weight_a, -length_weight_b, -max_length, -length_units, -r, -common_name)
+    dplyr::select(-n, -length_weight_a, -length_weight_b, -max_length, -length_units, -r, -common_name) |>
+    dplyr::rename("spec"="code","fsex"="sex")
   sex_unstratified <- data |>
     janitor::clean_names() |>
     dplyr::rename("code" = "spec", "sex" = "fsex") |>
@@ -28,7 +29,8 @@ calc_weight_ab <- function(data = NULL, ab_file = spoctackle::survey_ab) {
       weight_ab = length_weight_a * (flen^length_weight_b),
       sex_stratified_ab = FALSE
     ) |>
-    dplyr::select(-n, -length_weight_a, -length_weight_b, -max_length, -length_units, -r, -common_name, -sex.x, -sex.y)
+    dplyr::select(-n, -length_weight_a, -length_weight_b, -max_length, -length_units, -r, -common_name, -sex.y)%>%
+    dplyr::rename("spec"="code","fsex"="sex.x")
   all_weights <- dplyr::full_join(sex_stratified, sex_unstratified)
   base::print(all_weights)
 }
