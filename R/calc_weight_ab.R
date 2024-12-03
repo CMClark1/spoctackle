@@ -10,8 +10,6 @@
 #' @return "data" input file with additional columns for calculated weight (weight_ab) and weight units
 #' @export
 #'
-#' @examples
-#' calc_weight_ab(data=surveydata)
 
 calc_weight_ab <- function(data=NULL, ab_file=spoctackle::survey_ab, sex="sex",code="code",season="season", flen="flen"){
   sex_stratified <- data |>

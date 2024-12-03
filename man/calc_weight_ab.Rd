@@ -32,6 +32,3 @@ calc_weight_ab(
 \description{
 Calculate Fish Weights from Survey As and Bs
 }
-\examples{
-calc_weight_ab(data=surveydata)
-}
