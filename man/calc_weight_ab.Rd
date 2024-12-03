@@ -4,27 +4,12 @@
 \alias{calc_weight_ab}
 \title{Calculate Fish Weights from Survey As and Bs}
 \usage{
-calc_weight_ab(
-  data = NULL,
-  ab_file = spoctackle::survey_ab,
-  sex = "sex",
-  code = "code",
-  season = "season",
-  flen = "flen"
-)
+calc_weight_ab(data = NULL, ab_file = spoctackle::survey_ab)
 }
 \arguments{
 \item{data}{A dataframe containing columns for species code, sex, survey season, and length}
 
 \item{ab_file}{A dataframe containing the survey a and b values}
-
-\item{sex}{Sex code as used on the surveys: 0 (unspecified), 1 (male), or 2 (female)}
-
-\item{code}{Species code as used on the surveys: 10 (cod), 11 (haddock), 14 (silver hake), 16 (pollock)}
-
-\item{season}{Survey season: "summer" or "winter"}
-
-\item{flen}{Fish length, in the same units as the ab_file.}
 }
 \value{
 "data" input file with additional columns for calculated weight (weight_ab) and weight units

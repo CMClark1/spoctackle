@@ -1,11 +1,7 @@
 #' Calculate Fish Weights from Survey As and Bs
 #'
-#' @param data A dataframe containing columns for species code, sex, survey season, and length
+#' @param data A dataframe containing columns for species code, sex, survey season, and length in the format that they are used in the survey database (SPEC,FSEX,SEASON,FLEN)
 #' @param ab_file A dataframe containing the survey a and b values
-#' @param sex Sex code as used on the surveys: 0 (unspecified), 1 (male), or 2 (female)
-#' @param code Species code as used on the surveys: 10 (cod), 11 (haddock), 14 (silver hake), 16 (pollock)
-#' @param season Survey season: "summer" or "winter"
-#' @param flen Fish length, in the same units as the ab_file.
 #'
 #' @return "data" input file with additional columns for calculated weight (weight_ab) and weight units
 #' @export

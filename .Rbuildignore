@@ -1,3 +1,5 @@
 ^spoctackle\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
+^examples$
+^\.Rhistory$
