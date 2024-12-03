@@ -11,7 +11,7 @@
 #' @export
 #'
 
-calc_weight_ab <- function(data=NULL, ab_file=spoctackle::survey_ab, sex="FSEX",code="SPEC",season="SEASON", flen="FLEN"){
+calc_weight_ab <- function(data=NULL, ab_file=spoctackle::survey_ab){
   data$SEASON <- tolower(data$SEASON)
   sex_stratified <- data |>
     janitor::clean_names() |>
