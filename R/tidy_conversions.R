@@ -14,7 +14,7 @@
 
 tidy_conversions <- function(login=NULL, pw=NULL, dsn=NULL, species_list=10, season="SUMMER", localdir=NULL){
 
-if(season==stringr::str_to_upper("summer")){
+if(stringr::str_to_upper(season)==stringr::str_to_upper("summer")){
 
   channel <- ROracle::dbConnect(DBI::dbDriver("Oracle"), username=login, password=pw, dsn)
 
@@ -126,7 +126,7 @@ if(season==stringr::str_to_upper("summer")){
 
   base::return(joined_all)
 
-} else if (season%in%stringr::str_to_upper("spring","winter")){
+} else if (stringr::str_to_upper(season)%in%stringr::str_to_upper("spring","winter")){
 
   #Add spring conversions for cod and haddock - temporary until these are in the survey database
 
