@@ -37,7 +37,7 @@ calc_weight_ab <- function(data = NULL, ab_source = NULL) {
     base::print(all_weights)
   } else if (stringr::str_to_lower(ab_source) == "4xcod") {
     ab_file <- spoctackle::commercial_ab
-    cod4X <- detail_combined |>
+    cod4X <- data |>
       janitor::clean_names() |>
       dplyr::filter(spec == 10) %>%
       dplyr::mutate(
