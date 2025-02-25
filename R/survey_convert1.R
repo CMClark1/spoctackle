@@ -1,8 +1,8 @@
 #' Apply Groundfish Conversion Factors from the DFO Spring and Summer Surveys
 #'
-#' @param login Your username for the appropriate Oracle schema.
-#' @param pw Your password for the appropriate Oracle schema.
-#' @param dsn The name of the schema.
+#' @param oracle.username Your username for the appropriate Oracle schema.
+#' @param oracle.password Your password for the appropriate Oracle schema.
+#' @param oracle.dsn The name of the schema.
 #' @param species The species codes you want to include. They must require length-based abundance conversion. You can include one or multiple concatenated. Default is cod 10.
 #' @param season_select The season of the survey. Default is summer.
 #' @param stratum The selected stratum. Default is 4X.
@@ -19,7 +19,8 @@
 #'
 #'
 
-survey_convert <- function(summary = "total", species = 10, season_select = "summer", stratum = c(470:478, 480:485, 490:495), year_start = 1970, year_end = 2024, type = 1, equivalent = "cartier", ab = "survey", localdir = NULL, login = NULL, pw = NULL, dsn = NULL) {
+survey_convert <- function(summary = "total", species = 10, season_select = "summer", stratum = c(470:478, 480:485, 490:495), year_start = 1970, year_end = 2024, type = 1, equivalent = "cartier", ab = "survey", localdir = NULL, oracle.username = NULL, oracle.password = NULL, oracle.dsn = NULL) {
+
   # This pulls in the tidied conversion factors for the required species, season, and vessel equivalent
   joined <- spoctackle::tidy_conversions(login = oracle.username, pw = oracle.password, dsn = oracle.dsn, species_list = species, season = season_select, localdir = "C:\\LocalDataDump\\GROUNDFISH\\") |>
     dplyr::filter(vesseleq == stringr::str_to_lower(equivalent))
@@ -88,8 +89,6 @@ survey_convert <- function(summary = "total", species = 10, season_select = "sum
       FLEN = base::ifelse(!is.na(FLEN2), FLEN2, FLEN)
     ) |>
     dplyr::select(-FLEN2)
-
-
 
   detail_combined2 <- spoctackle::calc_weight_ab(detail_combined, ab_source = ab)
 
@@ -184,7 +183,7 @@ survey_convert <- function(summary = "total", species = 10, season_select = "sum
     return(per_tow)
   } else if (summary == "strata_level") {
     print("Converted and unconverted numbers and weight per stratum, calculated by standardizing to 1km2.")
-    return(per_stratum |> dplyr::select(year, season, strat, number_strat_conv, number_strata_unconv, weight_strata_conv, weight_strata_unconv))
+    return(per_stratum |> dplyr::select(year, season, strat, number_strata_conv, number_strata_unconv, weight_strata_conv, weight_strata_unconv))
   } else if (summary == "total") {
     print("Total abundance and biomass for all selected strata.")
     return(per_stratum |> dplyr::group_by(year, season) |> dplyr::summarise(abundance_conv = sum(number_strata_conv), abundance_unconv = sum(number_strata_unconv), biomass_conv = sum(weight_strata_conv), biomass_unconv = sum(weight_strata_unconv)))
