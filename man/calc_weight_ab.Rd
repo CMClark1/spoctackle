@@ -9,7 +9,7 @@ calc_weight_ab(data = NULL, ab_source = NULL)
 \arguments{
 \item{data}{A dataframe containing columns for species code, sex, survey season, and length in the format that they are used in the survey database (SPEC,FSEX,SEASON,FLEN). To run for As and Bs, by quarter, it also needs to have a numeric "MONTH" column.}
 
-\item{ab_source}{Source of the ab values: "survey" (Noble and Clark 2017) or "other" which will default to quartly As and Bs as used in Catch.}
+\item{ab_source}{Source of the ab values: "survey" (Noble and Clark 2017) or "other" which will default to quarterly As and Bs as used in Catch.}
 }
 \value{
 "data" input file with additional columns for calculated weight (weight_ab) and weight units

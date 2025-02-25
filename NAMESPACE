@@ -2,4 +2,6 @@
 
 export("%>%")
 export(calc_weight_ab)
+export(check_files_in_folder)
+export(tidy_conversions)
 importFrom(magrittr,"%>%")
