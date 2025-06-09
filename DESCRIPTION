@@ -1,0 +1,23 @@
+Package: spoctackle
+Title: SPoC Tackle Box
+Version: 0.0.0.9000
+Authors@R: 
+    person("Caira", "Clark", , "caira.clark@dfo-mpo.gc.ca", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-1111-2222-3333"))
+Description: Useful functions for the SPoC unit.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports: 
+    dplyr,
+    fs,
+    janitor,
+    magrittr,
+    Mar.datawrangling,
+    plyr,
+    ROracle,
+    stringr
+Depends: 
+    R (>= 2.10)
+LazyData: true
