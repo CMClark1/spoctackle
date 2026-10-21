@@ -15,9 +15,9 @@ survey_convert(
   equivalent = "cartier",
   ab = "survey",
   localdir = NULL,
-  login = NULL,
-  pw = NULL,
-  dsn = NULL
+  oracle.username = NULL,
+  oracle.password = NULL,
+  oracle.dsn = NULL
 )
 }
 \arguments{
@@ -41,11 +41,11 @@ survey_convert(
 
 \item{localdir}{A file path for a local directory. Temporarily, you need the file result_conversion.RData in that directory if you want to do spring conversions.}
 
-\item{login}{Your username for the appropriate Oracle schema.}
+\item{oracle.username}{Your username for the appropriate Oracle schema.}
 
-\item{pw}{Your password for the appropriate Oracle schema.}
+\item{oracle.password}{Your password for the appropriate Oracle schema.}
 
-\item{dsn}{The name of the schema.}
+\item{oracle.dsn}{The name of the schema.}
 }
 \value{
 Dataframe of species, length, from vessel, to vessel (vessel equivalent) and conversion factor.

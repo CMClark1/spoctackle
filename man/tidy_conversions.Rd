@@ -5,26 +5,24 @@
 \title{Tidy Groundfish Conversion Factors from the DFO Spring and Summer Surveys}
 \usage{
 tidy_conversions(
-  login = NULL,
-  pw = NULL,
-  dsn = NULL,
+  cxn = NULL,
   species_list = 10,
   season = "SUMMER",
   localdir = NULL
 )
 }
 \arguments{
-\item{login}{Your username for the appropriate Oracle schema.}
-
-\item{pw}{Your password for the appropriate Oracle schema.}
-
-\item{dsn}{The name of the schema.}
-
 \item{species_list}{The species codes you want to include. They must require length-based abundance conversion. You can include one or multiple concatenated.}
 
 \item{season}{The season of the survey.}
 
 \item{localdir}{A file path for a local directory. Temporarily, you need the file result_conversion.RData in that directory if you want to do spring conversions.}
+
+\item{login}{Your username for the appropriate Oracle schema.}
+
+\item{pw}{Your password for the appropriate Oracle schema.}
+
+\item{dsn}{The name of the schema.}
 }
 \value{
 Dataframe of species, length, from vessel, to vessel (vessel equivalent) and conversion factor.

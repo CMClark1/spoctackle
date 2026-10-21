@@ -8,7 +8,6 @@ Description: Useful functions for the SPoC unit.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
 Imports: 
     dplyr,
     fs,
@@ -19,5 +18,6 @@ Imports:
     ROracle,
     stringr
 Depends: 
-    R (>= 2.10)
+    R (>= 3.5)
 LazyData: true
+Config/roxygen2/version: 8.1.0

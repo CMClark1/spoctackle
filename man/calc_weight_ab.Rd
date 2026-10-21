@@ -4,7 +4,7 @@
 \alias{calc_weight_ab}
 \title{Calculate Fish Weights from Survey As and Bs}
 \usage{
-calc_weight_ab(data = NULL, ab_source = NULL)
+calc_weight_ab(data = NULL, ab_source = NULL, cxn = NULL)
 }
 \arguments{
 \item{data}{A dataframe containing columns for species code, sex, survey season, and length in the format that they are used in the survey database (SPEC,FSEX,SEASON,FLEN). To run for As and Bs, by quarter, it also needs to have a numeric "MONTH" column.}

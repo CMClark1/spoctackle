@@ -11,12 +11,12 @@
 #' @export
 #'
 #'
+#'
 
-tidy_conversions <- function(login = NULL, pw = NULL, dsn = NULL, species_list = 10, season = "SUMMER", localdir = NULL) {
-  if (stringr::str_to_upper(season) == stringr::str_to_upper("summer")) {
-    channel <- ROracle::dbConnect(DBI::dbDriver("Oracle"), username = login, password = pw, dsn)
+tidy_conversions <- function(cxn = NULL, species_list = 10, season = "SUMMER", localdir = NULL) {
+  if (stringr::str_to_lower(season) == "summer") {
 
-    gsconversions <- ROracle::dbGetQuery(channel, paste("select * from groundfish.gsconversions")) |> janitor::clean_names()
+    gsconversions <- ROracle::dbGetQuery(cxn, paste("select * from groundfish.gsconversions")) |> janitor::clean_names()
 
     conversion <- gsconversions |>
       dplyr::filter(spec %in% species_list & season == season)
@@ -137,7 +137,7 @@ tidy_conversions <- function(login = NULL, pw = NULL, dsn = NULL, species_list =
     )
 
     base::return(joined_all)
-  } else if (stringr::str_to_upper(season) %in% stringr::str_to_upper("spring", "winter")) {
+  } else if (stringr::str_to_lower(season) %in% c("spring", "winter")) {
     # Add spring conversions for cod and haddock - temporary until these are in the survey database
 
     base::load(base::paste(localdir, "//result_conversion.RData", sep = ""))
