@@ -140,9 +140,7 @@ tidy_conversions <- function(cxn = NULL, species_list = 10, season = "SUMMER", l
   } else if (stringr::str_to_lower(season) %in% c("spring", "winter")) {
     # Add spring conversions for cod and haddock - temporary until these are in the survey database
 
-    base::load(base::paste(localdir, "//result_conversion.RData", sep = ""))
-
-    result_format <- result_conversion |>
+    result_format <- spoctackle::spring_conversion |>
       dplyr::select(spec, lenseq, est_rho) |>
       dplyr::rename("flen" = lenseq, "cf_value" = est_rho)
 
