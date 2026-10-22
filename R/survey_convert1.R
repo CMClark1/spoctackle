@@ -4,7 +4,7 @@
 #' @param oracle.password Your password for the appropriate Oracle schema.
 #' @param oracle.dsn The name of the schema.
 #' @param species The species codes you want to include. They must require length-based abundance conversion. You can include one or multiple concatenated. Default is cod 10.
-#' @param season_select The season of the survey. Default is summer.
+#' @param season The season of the survey. Default is summer.
 #' @param stratum The selected stratum. Default is 4X.
 #' @param year_start The first year required. Default is 1970.
 #' @param year_end The final year required. Default is 2024.
@@ -19,10 +19,23 @@
 #'
 #'
 
-survey_convert <- function(summary = "total", species = 10, season_select = "summer", stratum = c(470:478, 480:485, 490:495), year_start = 1970, year_end = 2024, type = 1, equivalent = "cartier", ab = "survey", localdir = NULL, oracle.username = NULL, oracle.password = NULL, oracle.dsn = NULL) {
-
+survey_convert <- function(summary = "total", 
+                           species = 10, 
+                           season = "summer", 
+                           stratum = c(470:478, 480:485, 490:495), 
+                           year_start = 1970, 
+                           year_end = 2024, 
+                           type = 1, 
+                           equivalent = "cartier", 
+                           ab = "survey", 
+                           localdir = "C:\\DFO-MPO\\PESDData\\", 
+                           cxn = channel) {
+  
   # This pulls in the tidied conversion factors for the required species, season, and vessel equivalent
-  joined <- spoctackle::tidy_conversions(login = oracle.username, pw = oracle.password, dsn = oracle.dsn, species_list = species, season = season_select, localdir = "C:\\LocalDataDump\\GROUNDFISH\\") |>
+  joined <- spoctackle::tidy_conversions(cxn = cxn,
+                                         species = species, 
+                                         season = season, 
+                                         localdir = NULL) |>
     dplyr::filter(vesseleq == stringr::str_to_lower(equivalent))
 
   # This checks that you have the necessary data present in your localdir
@@ -68,7 +81,7 @@ survey_convert <- function(summary = "total", species = 10, season_select = "sum
       RATIO = ifelse(is.nan(TOTWGT / SAMPWGT), 1, TOTWGT / SAMPWGT)
     ) |>
     # The next line filters based on the species, season, strata, and years required
-    dplyr::filter(SPEC %in% base::as.numeric(species) & SEASON %in% stringr::str_to_upper(season_select) & STRAT %in% stratum & YEAR >= year_start & YEAR <= year_end & TYPE %in% type) |>
+    dplyr::filter(SPEC %in% base::as.numeric(species) & SEASON %in% stringr::str_to_upper(season) & STRAT %in% stratum & YEAR >= year_start & YEAR <= year_end & TYPE %in% type) |>
     # The next lines clean up FSEX
     dplyr::mutate(
       FSEX = dplyr::case_when(
@@ -92,7 +105,7 @@ survey_convert <- function(summary = "total", species = 10, season_select = "sum
 
   detail_combined2 <- spoctackle::calc_weight_ab(detail_combined, ab_source = ab)
 
-  #Individual fish - not standardized
+  # Individual fish - not standardized
   individual <- detail_combined2 |>
     dplyr::left_join(joined |> dplyr::select(spec, flen, vesel, conversion), by = c("spec", "flen", "vesel")) %>%
     dplyr::mutate(
@@ -165,11 +178,11 @@ survey_convert <- function(summary = "total", species = 10, season_select = "sum
     ) |>
     dplyr::distinct() |>
     dplyr::left_join(GSINF |>
-                       dplyr::left_join(GSMISSIONS, relationship = "many-to-many") |>
-                       dplyr::filter(SEASON %in% stringr::str_to_upper(season_select) & TYPE %in% type) |>
-                       dplyr::group_by(YEAR, SEASON, STRAT) |>
-                       dplyr::summarise(n_sets = length(SETNO)) |>
-                       janitor::clean_names()) |>
+      dplyr::left_join(GSMISSIONS, relationship = "many-to-many") |>
+      dplyr::filter(SEASON %in% stringr::str_to_upper(season) & TYPE %in% type) |>
+      dplyr::group_by(YEAR, SEASON, STRAT) |>
+      dplyr::summarise(n_sets = length(SETNO)) |>
+      janitor::clean_names()) |>
     dplyr::group_by(year, season, strat) |> # switched to year/season in case of different missions in same year
     dplyr::summarise(
       number_km2_conv = sum(number_conv) / mean(n_sets), # This is taking the sum of the sets per stratum and dividing by the total number of sets in that stratum
