@@ -8,12 +8,13 @@
 #' @param year_end The final year required. Default is 2024.
 #' @param equivalent The vessel equivalent. You can select any vessel, but, for example: "needler","teleost","cartier". Default is "cartier"
 #' @param ab The source of the ab values that are applied. See the function calc_weight_ab. Options include "survey" and "4Xcod" currently. Default is "survey"
-#' @param localdir A file path for a local directory. Temporarily, you need the file result_conversion.RData in that directory if you want to do spring conversions.
-#' @param summary The type of summary needed. The options are abundance and biomass per length group ("lf"), set level ("set_level"), strata level ("strata level"), or totals for the selected area ("total"). Default is "total"
+#' @param localdir A file path for a local directory where Mar.utils::get_data_tables stores copies of data tables. Temporarily, you need the file result_conversion.RData in that directory if you want to do spring conversions.
+#' @param summary The type of summary needed. The options are abundance and biomass per length group ("lf"), set level ("set_level"), strata level ("strata level"), or totals for the selected area ("total"). You can also choose "individual" for individual fish converted by length, not standardized for tow distance and width. Default is "total"
 #' @param type The type of sets to include. Default is 1, valid primary sets.
 #'
 #' @return Dataframe of species, length, from vessel, to vessel (vessel equivalent) and conversion factor.
 #' @export
+#'
 #'
 #'
 
@@ -22,7 +23,7 @@ survey_convert <- function(summary = "total",
                            season = "summer", 
                            stratum = c(470:478, 480:485, 490:495), 
                            year_start = 1970, 
-                           year_end = 2024, 
+                           year_end = as.integer(format(Sys.Date(), "%Y")), 
                            type = 1, 
                            equivalent = "cartier", 
                            ab = "survey", 
