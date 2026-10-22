@@ -3,7 +3,7 @@
 #' @param cxn  A valid Oracle connection object. 
 #' @param species The species codes you want to include. They must require length-based abundance conversion. You can include one or multiple concatenated.
 #' @param season The season of the survey.
-#' @param localdir A file path for a local directory. Temporarily, you need the file result_conversion.RData in that directory if you want to do spring conversions.
+#' @param localdir A file path for a local directory where Mar.utils::get_data_tables stores copies of data tables. Temporarily, you need the file result_conversion.RData in that directory if you want to do spring conversions.
 #'
 #' @return Dataframe of species, length, from vessel, to vessel (vessel equivalent) and conversion factor.
 #' @export
@@ -11,7 +11,7 @@
 #'
 #'
 
-tidy_conversions <- function(cxn = channel, 
+tidy_conversions <- function(cxn = NULL, 
                              species = 10, 
                              season = "summer", 
                              localdir = "C:\\DFO-MPO\\PESDData\\") {
