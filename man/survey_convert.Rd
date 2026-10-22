@@ -7,17 +7,15 @@
 survey_convert(
   summary = "total",
   species = 10,
-  season_select = "summer",
+  season = "summer",
   stratum = c(470:478, 480:485, 490:495),
   year_start = 1970,
   year_end = 2024,
   type = 1,
   equivalent = "cartier",
   ab = "survey",
-  localdir = NULL,
-  oracle.username = NULL,
-  oracle.password = NULL,
-  oracle.dsn = NULL
+  localdir = "C:\\\\DFO-MPO\\\\PESDData\\\\",
+  cxn = channel
 )
 }
 \arguments{
@@ -25,7 +23,7 @@ survey_convert(
 
 \item{species}{The species codes you want to include. They must require length-based abundance conversion. You can include one or multiple concatenated. Default is cod 10.}
 
-\item{season_select}{The season of the survey. Default is summer.}
+\item{season}{The season of the survey. Default is summer.}
 
 \item{stratum}{The selected stratum. Default is 4X.}
 
@@ -41,11 +39,7 @@ survey_convert(
 
 \item{localdir}{A file path for a local directory. Temporarily, you need the file result_conversion.RData in that directory if you want to do spring conversions.}
 
-\item{oracle.username}{Your username for the appropriate Oracle schema.}
-
-\item{oracle.password}{Your password for the appropriate Oracle schema.}
-
-\item{oracle.dsn}{The name of the schema.}
+\item{cxn}{A valid Oracle connection object.}
 }
 \value{
 Dataframe of species, length, from vessel, to vessel (vessel equivalent) and conversion factor.
