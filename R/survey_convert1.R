@@ -35,7 +35,7 @@ survey_convert <- function(summary = "total",
   joined <- spoctackle::tidy_conversions(cxn = cxn,
                                          species = species, 
                                          season = season, 
-                                         localdir = NULL) |>
+                                         localdir = localdir) |>
     dplyr::filter(vesseleq == stringr::str_to_lower(equivalent))
 
   # This checks that you have the necessary data present in your localdir
@@ -45,25 +45,21 @@ survey_convert <- function(summary = "total",
   required_files <- c("GROUNDFISH.GSCAT.RData", "GROUNDFISH.GSINF.RData", "GROUNDFISH.GSSPECIES.RData", "GROUNDFISH.GSDET.RData", "GROUNDFISH.GSMISSIONS.RData", "GROUNDFISH.GSSTRATUM.RData")
 
   if (spoctackle::check_files_in_folder(localdir, required_files) == FALSE) {
-    library(Mar.datawrangling)
-    Mar.datawrangling::get_data(
-      db = "rv",
-      usepkg = "roracle",
-      force.extract = FALSE,
-      data.dir = file.path(localdir),
-      fn.oracle.username = oracle.username,
-      fn.oracle.password = oracle.password,
-      fn.oracle.dsn = oracle.dsn,
-      env = .GlobalEnv,
-      quiet = FALSE
-    )
+    library(Mar.utils)
+    Mar.utils::get_data_tables(
+      schema = "GROUNDFISH",
+      tables = c("GSCAT","GSDET","GSINF","GSMISSIONS","GSSPECIES","GSSTRATUM","GSXTYPE"),
+      cxn = cxn,
+      data.dir = localdir)
   } else if (spoctackle::check_files_in_folder(localdir, required_files) == TRUE) {
-    file_list <- fs::dir_ls(localdir)
-    base::lapply(file_list, load, .GlobalEnv)
+    files <- list.files(
+      path = localdir,
+      pattern = "^GROUNDFISH.*\\.(RData|rda)$",
+      full.names = TRUE
+    )
   } else if (!spoctackle::check_files_in_folder(localdir, required_files) %in% c(TRUE, FALSE)) {
     print("Unable to check if required files are present.")
   }
-
 
   # Format and clean the local data
   detail_combined <- GSDET |>
@@ -103,7 +99,7 @@ survey_convert <- function(summary = "total",
     ) |>
     dplyr::select(-FLEN2)
 
-  detail_combined2 <- spoctackle::calc_weight_ab(detail_combined, ab_source = ab)
+  detail_combined2 <- spoctackle::calc_weight_ab(cxn = cxn, data=detail_combined, ab_source = ab)
 
   # Individual fish - not standardized
   individual <- detail_combined2 |>
@@ -130,11 +126,11 @@ survey_convert <- function(summary = "total",
     dplyr::group_by(year, season, mission, strat, setno, dist, width, flen, conversion) |>
     # This summarises it by length group
     dplyr::summarise(
-      clen_conv = sum(clen_conv) / (dist * 1.852),
-      clen_unconv = sum(clen_unconv) / (dist * 1.852),
-      cwt_conv = sum(cwt_conv) / (dist * 1.852),
-      cwt_unconv = sum(cwt_unconv) / (dist * 1.852)
-    )
+      clen_conv = sum(clen_conv) / (mean(dist) * 1.852) ,
+      clen_unconv = sum(clen_unconv) / (mean(dist) * 1.852),
+      cwt_conv = sum(cwt_conv) / (mean(dist) * 1.852),
+      cwt_unconv = sum(cwt_unconv) / (mean(dist) * 1.852))
+  
 
   # Tow level - standardized to 1 km tow distance
 
@@ -150,39 +146,50 @@ survey_convert <- function(summary = "total",
     dplyr::distinct()
 
   # Strata level - standardizes to km2 using tow distance and with
-
-  per_stratum <- detail_combined2 |>
+  
+  per_stratum <-
+    
+    #Step 1 - apply the conversion factor and totwgt/sampwgt at the detail level. This gives the converted count at length and the converted weight at length. Unconverted values are also included to compare. and convert to a standard km2
+    
+    detail_combined2 |>
     dplyr::left_join(joined |> dplyr::select(spec, flen, vesel, conversion), by = c("spec", "flen", "vesel")) %>%
     dplyr::mutate(
       conversion = base::ifelse(is.na(conversion), 1, conversion), # cleans up conversions by using 1 when NA
-      clen_conv = ((clen * conversion) * ratio), # applies conversion, totwgt/sampwgt ratio
-      clen_unconv = (clen * ratio), # applies only ratio for unconverted
-      cwt_conv = clen_conv * weight_ab, # these are the weights/biomass
-      cwt_unconv = clen_unconv * weight_ab
-    ) |>
+      clen_conv = ((clen * conversion) * ratio), #/ (dist * 1.852 * width), # applies conversion, totwgt/sampwgt ratio
+      clen_unconv = (clen * ratio), #/ (dist * 1.852 * width), # applies only ratio for unconverted
+      cwt_conv = (clen_conv * weight_ab), #/ (dist * 1.852 * width), # these are the weights/biomass
+      cwt_unconv = (clen_unconv * weight_ab) #/ (dist * 1.852 * width)
+    ) |> 
+    
+    #Step 2 - summarize the detail calculations in Step 1 by length group
     dplyr::group_by(year, season, mission, strat, setno, dist, width, flen, conversion) |>
-    # This summarises it by length group
     dplyr::summarise(
       clen_conv = sum(clen_conv),
       clen_unconv = sum(clen_unconv),
       cwt_conv = sum(cwt_conv),
       cwt_unconv = sum(cwt_unconv)
-    ) |>
+    ) |> 
+    
+    #Step 3 - Next we summarise to tow level 
+    
     dplyr::mutate(id = paste(mission, setno, sep = "-")) |>
+    dplyr::ungroup() |> 
     dplyr::group_by(year, season, strat, id) |>
     dplyr::summarise(
-      number_conv = sum(clen_conv) / (dist * 1.852 * width), # sum to tow level and standardize to km2
-      number_unconv = sum(clen_unconv) / (dist * 1.852 * width),
-      weight_conv = sum(cwt_conv) / (dist * 1.852 * width),
-      weight_unconv = sum(cwt_unconv) / (dist * 1.852 * width)
-    ) |>
-    dplyr::distinct() |>
+      number_conv = sum(clen_conv) / (mean(dist) * 1.852 * mean(width)),
+      number_unconv = sum(clen_unconv) / (mean(dist) * 1.852 * mean(width)),
+      weight_conv = sum(cwt_conv) / (mean(dist) * 1.852 * mean(width)),
+      weight_unconv = sum(cwt_unconv) / (mean(dist) * 1.852 * mean(width))
+    ) |>  dplyr::distinct() |> 
+    
     dplyr::left_join(GSINF |>
-      dplyr::left_join(GSMISSIONS, relationship = "many-to-many") |>
-      dplyr::filter(SEASON %in% stringr::str_to_upper(season) & TYPE %in% type) |>
-      dplyr::group_by(YEAR, SEASON, STRAT) |>
-      dplyr::summarise(n_sets = length(SETNO)) |>
-      janitor::clean_names()) |>
+                       dplyr::left_join(GSMISSIONS, relationship = "many-to-many") |>
+                       dplyr::filter(SEASON %in% stringr::str_to_upper(season) & TYPE %in% type) |>
+                       dplyr::mutate(id = paste(MISSION, SETNO, sep = "-")) |> 
+                       dplyr::group_by(YEAR, SEASON, STRAT) |>
+                       dplyr::summarise(n_sets = length(SETNO)) |>
+                       janitor::clean_names() |> 
+                       dplyr::mutate(season=stringr::str_to_lower(season))) |>
     dplyr::group_by(year, season, strat) |> # switched to year/season in case of different missions in same year
     dplyr::summarise(
       number_km2_conv = sum(number_conv) / mean(n_sets), # This is taking the sum of the sets per stratum and dividing by the total number of sets in that stratum
