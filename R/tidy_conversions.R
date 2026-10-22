@@ -3,7 +3,7 @@
 #' @param login Your username for the appropriate Oracle schema.
 #' @param pw Your password for the appropriate Oracle schema.
 #' @param dsn The name of the schema.
-#' @param species_list The species codes you want to include. They must require length-based abundance conversion. You can include one or multiple concatenated.
+#' @param species The species codes you want to include. They must require length-based abundance conversion. You can include one or multiple concatenated.
 #' @param season The season of the survey.
 #' @param localdir A file path for a local directory. Temporarily, you need the file result_conversion.RData in that directory if you want to do spring conversions.
 #'
@@ -13,13 +13,16 @@
 #'
 #'
 
-tidy_conversions <- function(cxn = NULL, species_list = 10, season = "SUMMER", localdir = NULL) {
+tidy_conversions <- function(cxn = channel, 
+                             species = 10, 
+                             season = "summer", 
+                             localdir = "C:\\DFO-MPO\\PESDData\\") {
+  
   if (stringr::str_to_lower(season) == "summer") {
-
     gsconversions <- ROracle::dbGetQuery(cxn, paste("select * from groundfish.gsconversions")) |> janitor::clean_names()
 
     conversion <- gsconversions |>
-      dplyr::filter(spec %in% species_list & season == season)
+      dplyr::filter(spec %in% species & season == season)
 
     conversion_nedtel <- conversion |>
       dplyr::filter(from_vessel == "NED_TEM" & to_vessel == "TEL_VEN") |>
@@ -152,7 +155,7 @@ tidy_conversions <- function(cxn = NULL, species_list = 10, season = "SUMMER", l
     spring_conversions <- base::rbind(result_format, maxmins) |> dplyr::mutate(from_vessel = "TEL_VEN", to_vessel = "CAR_CAB", season = "SPRING", cf_model_type = "LDM", cf_metric = "ABUNDANCE", cf_unit = "CM")
 
     conversion <- spring_conversions |>
-      dplyr::filter(spec %in% species_list & season == season)
+      dplyr::filter(spec %in% species & season == season)
 
     conversion_telcar <- conversion |>
       dplyr::filter(from_vessel == "TEL_VEN" & to_vessel == "CAR_CAB") |>
