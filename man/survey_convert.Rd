@@ -10,7 +10,7 @@ survey_convert(
   season = "summer",
   stratum = c(470:478, 480:485, 490:495),
   year_start = 1970,
-  year_end = 2024,
+  year_end = as.integer(format(Sys.Date(), "\%Y")),
   type = 1,
   equivalent = "cartier",
   ab = "survey",
@@ -19,7 +19,7 @@ survey_convert(
 )
 }
 \arguments{
-\item{summary}{The type of summary needed. The options are abundance and biomass per length group ("lf"), set level ("set_level"), strata level ("strata level"), or totals for the selected area ("total"). Default is "total"}
+\item{summary}{The type of summary needed. The options are abundance and biomass per length group ("lf"), set level ("set_level"), strata level ("strata level"), or totals for the selected area ("total"). You can also choose "individual" for individual fish converted by length, not standardized for tow distance and width. Default is "total"}
 
 \item{species}{The species codes you want to include. They must require length-based abundance conversion. You can include one or multiple concatenated. Default is cod 10.}
 
@@ -37,7 +37,7 @@ survey_convert(
 
 \item{ab}{The source of the ab values that are applied. See the function calc_weight_ab. Options include "survey" and "4Xcod" currently. Default is "survey"}
 
-\item{localdir}{A file path for a local directory. Temporarily, you need the file result_conversion.RData in that directory if you want to do spring conversions.}
+\item{localdir}{A file path for a local directory where Mar.utils::get_data_tables stores copies of data tables. Temporarily, you need the file result_conversion.RData in that directory if you want to do spring conversions.}
 
 \item{cxn}{A valid Oracle connection object.}
 }
