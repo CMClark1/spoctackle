@@ -1,8 +1,6 @@
 #' Tidy Groundfish Conversion Factors from the DFO Spring and Summer Surveys
 #'
-#' @param login Your username for the appropriate Oracle schema.
-#' @param pw Your password for the appropriate Oracle schema.
-#' @param dsn The name of the schema.
+#' @param cxn  A valid Oracle connection object. 
 #' @param species The species codes you want to include. They must require length-based abundance conversion. You can include one or multiple concatenated.
 #' @param season The season of the survey.
 #' @param localdir A file path for a local directory. Temporarily, you need the file result_conversion.RData in that directory if you want to do spring conversions.
