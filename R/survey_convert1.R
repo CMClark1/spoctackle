@@ -28,7 +28,7 @@ survey_convert <- function(summary = "total",
                            equivalent = "cartier", 
                            ab = "survey", 
                            localdir = "C:\\DFO-MPO\\PESDData\\", 
-                           cxn = channel) {
+                           cxn = NULL) {
   
   # This pulls in the tidied conversion factors for the required species, season, and vessel equivalent
   joined <- spoctackle::tidy_conversions(cxn = cxn,
@@ -43,22 +43,23 @@ survey_convert <- function(summary = "total",
 
   required_files <- c("GROUNDFISH.GSCAT.RData", "GROUNDFISH.GSINF.RData", "GROUNDFISH.GSSPECIES.RData", "GROUNDFISH.GSDET.RData", "GROUNDFISH.GSMISSIONS.RData", "GROUNDFISH.GSSTRATUM.RData")
 
-  if (spoctackle::check_files_in_folder(localdir, required_files) == FALSE) {
-    library(Mar.utils)
+  # if (spoctackle::check_files_in_folder(localdir, required_files) == FALSE) {
+  #   library(Mar.utils)
     Mar.utils::get_data_tables(
       schema = "GROUNDFISH",
       tables = c("GSCAT","GSDET","GSINF","GSMISSIONS","GSSPECIES","GSSTRATUM","GSXTYPE"),
       cxn = cxn,
       data.dir = localdir)
-  } else if (spoctackle::check_files_in_folder(localdir, required_files) == TRUE) {
-    files <- list.files(
-      path = localdir,
-      pattern = "^GROUNDFISH.*\\.(RData|rda)$",
-      full.names = TRUE
-    )
-  } else if (!spoctackle::check_files_in_folder(localdir, required_files) %in% c(TRUE, FALSE)) {
-    print("Unable to check if required files are present.")
-  }
+  # } else if (spoctackle::check_files_in_folder(localdir, required_files) == TRUE) {
+  #   files <- list.files(
+  #     path = localdir,
+  #     pattern = "^GROUNDFISH.*\\.(RData|rda)$",
+  #     full.names = TRUE
+  #   )
+  #   lapply(files, load, envir = .GlobalEnv)
+  # } else if (!spoctackle::check_files_in_folder(localdir, required_files) %in% c(TRUE, FALSE)) {
+  #   print("Unable to check if required files are present.")
+  # }
 
   # Format and clean the local data
   detail_combined <- GSDET |>
