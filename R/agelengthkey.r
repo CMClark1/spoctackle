@@ -61,9 +61,9 @@ data_filtered <-  GSDET |>
 #Bin in 3cm length bins, group and count by length and age
 alk_long <- data_filtered |> 
   dplyr::mutate(flen_bin = round((flen - 1) / 3) * 3 + 1) |> 
-  group_by(spec, year,season,flen_bin,age) |> 
+  dplyr::group_by(spec, year,season,flen_bin,age) |> 
     count() |> 
-  group_by(spec,year,season,flen_bin) |> 
+  dplyr::group_by(spec,year,season,flen_bin) |> 
   dplyr::mutate(prop=n/sum(n))
 
 return(alk_long)
