@@ -64,7 +64,7 @@ alk_long <- data_filtered |>
   dplyr::group_by(spec, year,season,flen_bin,age) |> 
     dplyr::count() |> 
   dplyr::group_by(spec,year,season,flen_bin) |> 
-  dplyr::mutate(prop=n/sum(n))
+  dplyr::mutate(p_age=n/sum(n))
 
 return(alk_long)
   
