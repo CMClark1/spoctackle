@@ -13,6 +13,7 @@
 #' @param localdir A file path for a local directory where Mar.utils::get_data_tables stores copies of data tables. Temporarily, you need the file result_conversion.RData in that directory if you want to do spring conversions.
 #' @param summary The type of summary needed. The options are abundance and biomass per length group ("lf"), set level ("set_level"), strata level ("strata level"), or totals for the selected area ("total"). You can also choose "individual" for individual fish converted by length, not standardized for tow distance and width. Default is "total"
 #' @param type The type of sets to include. Default is 1, valid primary sets.
+#' @param age.based TRUE if you want biomass and abundance totals per age group. FALSE if you want length-based totals.
 #'
 #' @return Dataframe of species, length, from vessel, to vessel (vessel equivalent) and conversion factor.
 #' @export

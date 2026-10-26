@@ -47,6 +47,8 @@ survey_convert(
 \item{login}{Your computer login.}
 
 \item{computer}{Your computer name.}
+
+\item{age.based}{TRUE if you want biomass and abundance totals per age group. FALSE if you want length-based totals.}
 }
 \value{
 Dataframe of species, length, from vessel, to vessel (vessel equivalent) and conversion factor.
