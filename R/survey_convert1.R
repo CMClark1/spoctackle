@@ -28,7 +28,10 @@ survey_convert <- function(summary = "total",
                            equivalent = "cartier", 
                            ab = "survey", 
                            localdir = "C:\\DFO-MPO\\PESDData\\", 
-                           cxn = NULL) {
+                           cxn = NULL,
+                           login = NULL,
+                           computer = NULL,
+                           age.based = FALSE) {
   
   # This pulls in the tidied conversion factors for the required species, season, and vessel equivalent
   joined <- spoctackle::tidy_conversions(cxn = cxn,
@@ -36,31 +39,39 @@ survey_convert <- function(summary = "total",
                                          season = season, 
                                          localdir = localdir) |>
     dplyr::filter(vesseleq == stringr::str_to_lower(equivalent))
-
+  
   # This checks that you have the necessary data present in your localdir
-
+  
   file_list <- fs::dir_ls(localdir)
-
+  
   required_files <- c("GROUNDFISH.GSCAT.RData", "GROUNDFISH.GSINF.RData", "GROUNDFISH.GSSPECIES.RData", "GROUNDFISH.GSDET.RData", "GROUNDFISH.GSMISSIONS.RData", "GROUNDFISH.GSSTRATUM.RData")
-
-  # if (spoctackle::check_files_in_folder(localdir, required_files) == FALSE) {
-  #   library(Mar.utils)
-    Mar.utils::get_data_tables(
-      schema = "GROUNDFISH",
-      tables = c("GSCAT","GSDET","GSINF","GSMISSIONS","GSSPECIES","GSSTRATUM","GSXTYPE"),
-      cxn = cxn,
-      data.dir = localdir)
-  # } else if (spoctackle::check_files_in_folder(localdir, required_files) == TRUE) {
-  #   files <- list.files(
-  #     path = localdir,
-  #     pattern = "^GROUNDFISH.*\\.(RData|rda)$",
-  #     full.names = TRUE
-  #   )
-  #   lapply(files, load, envir = .GlobalEnv)
-  # } else if (!spoctackle::check_files_in_folder(localdir, required_files) %in% c(TRUE, FALSE)) {
-  #   print("Unable to check if required files are present.")
-  # }
-
+  
+  if (spoctackle::check_files_in_folder(localdir, required_files) == FALSE) {
+    
+    library(Mar.utils)
+    
+  Mar.utils::get_data_tables(
+    schema = "GROUNDFISH",
+    tables = c("GSCAT","GSDET","GSINF","GSMISSIONS","GSSPECIES","GSSTRATUM","GSXTYPE"),
+    cxn = cxn,
+    data.dir = localdir)
+  
+  } else if (spoctackle::check_files_in_folder(localdir, required_files) == TRUE) {
+    
+    library(Mar.utils)
+    
+    for (i in required_files) {
+      Mar.utils::load_encrypted(
+        paste0(localdir,i),
+        extract_user = login,
+        extract_computer = computer
+      )
+    }
+    
+  } else if (!spoctackle::check_files_in_folder(localdir, required_files) %in% c(TRUE, FALSE)) {
+    print("Unable to check if required files are present.")
+  }
+  
   # Format and clean the local data
   detail_combined <- GSDET |>
     dplyr::left_join(GSINF, by = c("MISSION", "SETNO"), relationship = "many-to-many") |>
@@ -98,12 +109,14 @@ survey_convert <- function(summary = "total",
       FLEN = base::ifelse(!is.na(FLEN2), FLEN2, FLEN)
     ) |>
     dplyr::select(-FLEN2)
-
+  
   detail_combined2 <- spoctackle::calc_weight_ab(cxn = cxn, data=detail_combined, ab_source = ab)
+  
+if(age.based==FALSE){
 
   # Individual fish - not standardized
   individual <- detail_combined2 |>
-    dplyr::left_join(joined |> dplyr::select(spec, flen, vesel, conversion), by = c("spec", "flen", "vesel")) %>%
+    dplyr::left_join(joined |> dplyr::select(spec, flen, vesel, conversion), by = c("spec", "flen", "vesel"))  |> 
     dplyr::mutate(
       conversion = base::ifelse(is.na(conversion), 1, conversion), # cleans up conversions by using 1 when NA
       clen_conv = ((clen * conversion) * ratio), # applies conversion, totwgt/sampwgt ratio
@@ -115,7 +128,7 @@ survey_convert <- function(summary = "total",
   # Length Frequency -- this first part is standardized to 1 km tow distance
 
   per_lengthgroup <- detail_combined2 |>
-    dplyr::left_join(joined |> dplyr::select(spec, flen, vesel, conversion), by = c("spec", "flen", "vesel")) %>%
+    dplyr::left_join(joined |> dplyr::select(spec, flen, vesel, conversion), by = c("spec", "flen", "vesel")) |>
     dplyr::mutate(
       conversion = base::ifelse(is.na(conversion), 1, conversion), # cleans up conversions by using 1 when NA
       clen_conv = ((clen * conversion) * ratio), # applies conversion, totwgt/sampwgt ratio
@@ -129,7 +142,8 @@ survey_convert <- function(summary = "total",
       clen_conv = sum(clen_conv) / (mean(dist) * 1.852) ,
       clen_unconv = sum(clen_unconv) / (mean(dist) * 1.852),
       cwt_conv = sum(cwt_conv) / (mean(dist) * 1.852),
-      cwt_unconv = sum(cwt_unconv) / (mean(dist) * 1.852))
+      cwt_unconv = sum(cwt_unconv) / (mean(dist) * 1.852),
+      .groups="drop")
   
 
   # Tow level - standardized to 1 km tow distance
@@ -141,7 +155,8 @@ survey_convert <- function(summary = "total",
       number_conv = sum(clen_conv), # sum to tow level and standardize to km2
       number_unconv = sum(clen_unconv),
       weight_conv = sum(cwt_conv),
-      weight_unconv = sum(cwt_unconv)
+      weight_unconv = sum(cwt_unconv),
+      .groups="drop"
     ) |>
     dplyr::distinct()
 
@@ -152,7 +167,7 @@ survey_convert <- function(summary = "total",
     #Step 1 - apply the conversion factor and totwgt/sampwgt at the detail level. This gives the converted count at length and the converted weight at length. Unconverted values are also included to compare. and convert to a standard km2
     
     detail_combined2 |>
-    dplyr::left_join(joined |> dplyr::select(spec, flen, vesel, conversion), by = c("spec", "flen", "vesel")) %>%
+    dplyr::left_join(joined |> dplyr::select(spec, flen, vesel, conversion), by = c("spec", "flen", "vesel")) |>
     dplyr::mutate(
       conversion = base::ifelse(is.na(conversion), 1, conversion), # cleans up conversions by using 1 when NA
       clen_conv = ((clen * conversion) * ratio), #/ (dist * 1.852 * width), # applies conversion, totwgt/sampwgt ratio
@@ -167,19 +182,20 @@ survey_convert <- function(summary = "total",
       clen_conv = sum(clen_conv),
       clen_unconv = sum(clen_unconv),
       cwt_conv = sum(cwt_conv),
-      cwt_unconv = sum(cwt_unconv)
+      cwt_unconv = sum(cwt_unconv),
+      .groups="drop"
     ) |> 
     
     #Step 3 - Next we summarise to tow level 
     
     dplyr::mutate(id = paste(mission, setno, sep = "-")) |>
-    dplyr::ungroup() |> 
     dplyr::group_by(year, season, strat, id) |>
     dplyr::summarise(
       number_conv = sum(clen_conv) / (mean(dist) * 1.852 * mean(width)),
       number_unconv = sum(clen_unconv) / (mean(dist) * 1.852 * mean(width)),
       weight_conv = sum(cwt_conv) / (mean(dist) * 1.852 * mean(width)),
-      weight_unconv = sum(cwt_unconv) / (mean(dist) * 1.852 * mean(width))
+      weight_unconv = sum(cwt_unconv) / (mean(dist) * 1.852 * mean(width)),
+      .groups="drop"
     ) |>  dplyr::distinct() |> 
     
     dplyr::left_join(GSINF |>
@@ -187,7 +203,7 @@ survey_convert <- function(summary = "total",
                        dplyr::filter(SEASON %in% stringr::str_to_upper(season) & TYPE %in% type) |>
                        dplyr::mutate(id = paste(MISSION, SETNO, sep = "-")) |> 
                        dplyr::group_by(YEAR, SEASON, STRAT) |>
-                       dplyr::summarise(n_sets = length(SETNO)) |>
+                       dplyr::summarise(n_sets = length(SETNO), .groups="drop") |>
                        janitor::clean_names() |> 
                        dplyr::mutate(season=stringr::str_to_lower(season))) |>
     dplyr::group_by(year, season, strat) |> # switched to year/season in case of different missions in same year
@@ -203,7 +219,8 @@ survey_convert <- function(summary = "total",
       number_strata_conv = number_km2_conv * strat_area,
       number_strata_unconv = number_km2_unconv * strat_area,
       weight_strata_conv = (weight_km2_conv / 1000) * strat_area,
-      weight_strata_unconv = (weight_km2_unconv / 1000) * strat_area
+      weight_strata_unconv = (weight_km2_unconv / 1000) * strat_area,
+      .groups="drop"
     ) # convert to kg
 
   if (summary == "lf") {
@@ -224,4 +241,196 @@ survey_convert <- function(summary = "total",
   } else {
     print("Requested summary not available. See documentation for survey_convert.")
   }
+  
+} else if (age.based==TRUE){
+  
+  alk_calc <- agelengthkey() |> filter(year%in%detail_combined2$year)
+  
+  # Do per-stratum calculations by age
+  per_age_stratum <-
+    
+    detail_combined2 |>
+    dplyr::left_join(joined |> dplyr::select(spec, flen, vesel, conversion), by = c("spec", "flen", "vesel")) |>
+    dplyr::mutate(
+      conversion = base::ifelse(is.na(conversion), 1, conversion), 
+      clen_conv = ((clen * conversion) * ratio), 
+      clen_unconv = (clen * ratio), 
+      cwt_conv = (clen_conv * weight_ab), 
+      cwt_unconv = (clen_unconv * weight_ab) 
+    ) |>
+    #N's script start
+    dplyr::left_join(
+      alk_caira |>   mutate(
+        season=stringr::str_to_lower(season)
+      ),
+      by = c("year","season","flen_bin"),
+      relationship = "many-to-many"
+    ) |> 
+    dplyr::rename(
+      alk_age = age.y
+    ) |> 
+    dplyr::filter(!is.na(alk_age)) |> 
+    dplyr::mutate(
+      clen_conv = clen_conv * p_age,
+      clen_unconv = clen_unconv * p_age,
+      cwt_conv = cwt_conv * p_age,
+      cwt_unconv = cwt_unconv * p_age
+    ) |> 
+    
+    # Step 2 - summarize by age instead of length
+    
+    dplyr::group_by(
+      year,
+      season,
+      mission,
+      strat,
+      setno,
+      dist,
+      width,
+      alk_age
+    ) |> 
+    
+    dplyr::summarise(
+      clen_conv = sum(clen_conv),
+      clen_unconv = sum(clen_unconv),
+      cwt_conv = sum(cwt_conv),
+      cwt_unconv = sum(cwt_unconv),
+      .groups="drop"
+    ) |> 
+    
+    # Step 3 - tow level
+    
+    dplyr::mutate(
+      id = paste(mission, setno, sep = "-")
+    ) |> 
+    dplyr::group_by(
+      year,
+      season,
+      strat,
+      age_alk = alk_age,
+      id
+    ) |> 
+    
+    dplyr::summarise(
+      number_conv =
+        sum(clen_conv) /
+        (mean(dist) * 1.852 * mean(width)),
+      
+      number_unconv =
+        sum(clen_unconv) /
+        (mean(dist) * 1.852 * mean(width)),
+      
+      weight_conv =
+        sum(cwt_conv) /
+        (mean(dist) * 1.852 * mean(width)),
+      
+      weight_unconv =
+        sum(cwt_unconv) /
+        (mean(dist) * 1.852 * mean(width)),
+      
+      .groups = "drop"
+    ) |> 
+    
+    dplyr::left_join(
+      GSINF |>
+        dplyr::left_join(
+          GSMISSIONS,
+          relationship = "many-to-many"
+        ) |>
+        dplyr::filter(
+          SEASON %in% stringr::str_to_upper(season_select),
+          TYPE %in% type
+        ) |>
+        dplyr::mutate(
+          id = paste(MISSION, SETNO, sep = "-")
+        ) |>
+        dplyr::group_by(
+          YEAR,
+          SEASON,
+          STRAT
+        ) |>
+        dplyr::summarise(
+          n_sets = length(SETNO),
+          .groups = "drop"
+        ) |>
+        janitor::clean_names() |>
+        dplyr::mutate(
+          season = stringr::str_to_lower(season)
+        ),
+      by = c(
+        "year",
+        "season",
+        "strat"
+      )
+    ) |>
+    
+    dplyr::group_by(
+      year,
+      season,
+      strat,
+      age_alk
+    ) |>
+    
+    dplyr::summarise(
+      number_km2_conv =
+        sum(number_conv) / mean(n_sets),
+      
+      number_km2_unconv =
+        sum(number_unconv) / mean(n_sets),
+      
+      weight_km2_conv =
+        sum(weight_conv) / mean(n_sets),
+      
+      weight_km2_unconv =
+        sum(weight_unconv) / mean(n_sets),
+      
+      .groups = "drop"
+    ) |>
+    
+    dplyr::left_join(
+      GSSTRATUM |>
+        select(STRAT, AREA) |>
+        rename(strat_area = AREA) |>
+        janitor::clean_names(),
+      by = "strat"
+    ) |>
+    
+    dplyr::mutate(
+      strat_area = strat_area * 3.429904,
+      
+      number_strata_conv =
+        number_km2_conv * strat_area,
+      
+      number_strata_unconv =
+        number_km2_unconv * strat_area,
+      
+      weight_strata_conv =
+        (weight_km2_conv / 1000) * strat_area,
+      
+      weight_strata_unconv =
+        (weight_km2_unconv / 1000) * strat_area
+    ) |>
+    
+    dplyr::rename(
+      age = age_alk
+    )
+  
+  # Get totals by age
+  totals_at_age <- per_age_stratum |>
+    dplyr::group_by(
+      year,
+      season,
+      age
+    ) |> 
+    dplyr::summarise(
+      abundance_conv = sum(number_strata_conv),
+      abundance_unconv = sum(number_strata_unconv),
+      biomass_conv = sum(weight_strata_conv),
+      biomass_unconv = sum(weight_strata_unconv),
+      .groups = "drop"
+    )
+  
+  return(totals_at_age)
+  
+}
 }
