@@ -42,11 +42,14 @@ survey_convert <- function(summary = "total",
   
   # This checks that you have the necessary data present in your localdir
   
-  file_list <- fs::dir_ls(localdir)
-  
   required_files <- c("GROUNDFISH.GSCAT.RData", "GROUNDFISH.GSINF.RData", "GROUNDFISH.GSSPECIES.RData", "GROUNDFISH.GSDET.RData", "GROUNDFISH.GSMISSIONS.RData", "GROUNDFISH.GSSTRATUM.RData")
   
-  if (spoctackle::check_files_in_folder(localdir, required_files) == FALSE) {
+  files_present <- spoctackle::check_files_in_folder(
+    localdir,
+    required_files
+  )
+  
+  if (isFALSE(files_present)) {
     
     library(Mar.utils)
     
@@ -56,19 +59,19 @@ survey_convert <- function(summary = "total",
     cxn = cxn,
     data.dir = localdir)
   
-  } else if (spoctackle::check_files_in_folder(localdir, required_files) == TRUE) {
+  } else if (isTRUE(files_present)) {
     
     library(Mar.utils)
     
     for (i in required_files) {
       Mar.utils::load_encrypted(
-        paste0(localdir,i),
+        file.path(localdir, i),
         extract_user = login,
         extract_computer = computer
       )
     }
     
-  } else if (!spoctackle::check_files_in_folder(localdir, required_files) %in% c(TRUE, FALSE)) {
+  } else {
     print("Unable to check if required files are present.")
   }
   
@@ -98,8 +101,8 @@ survey_convert <- function(summary = "total",
       ),
       # The next lines clean up FLEN for herring and grenadier
       FLEN2 = dplyr::case_when(
-        SPEC == 410 & YEAR < 2019 & !MISSION == "NED2010027" ~ ((FLEN - 1.770067) / 4.453725) * 10,
-        SPEC == 410 & MISSION == "NED2010027" & !SETNO %in% c(219, 222, 223, 229, 230, 233, 236) ~ ((FLEN - 1.770067) / 4.453725) * 10,
+        SPEC == 410 & YEAR < 2019 & MISSION != "NED2010027" ~ ((FLEN - 1.770067) / 4.453725) * 10,
+        SPEC == 410 & MISSION == "NED2010027" & !(SETNO %in% c(219, 222, 223, 229, 230, 233, 236)) ~ ((FLEN - 1.770067) / 4.453725) * 10,
         SPEC == 410 & MISSION == "NED2010027" & SETNO %in% c(219, 222, 223, 229, 230, 233, 236) ~ FLEN * 10,
         SPEC == 410 & MISSION == "NED2019102" & SETNO %in% c(13, 15, 132, 133, 150) ~ FLEN * 10,
         SPEC == 410 & MISSION == "NED2019030" & SETNO %in% c(132, 133, 150) ~ FLEN * 10,
@@ -219,8 +222,7 @@ if(age.based==FALSE){
       number_strata_conv = number_km2_conv * strat_area,
       number_strata_unconv = number_km2_unconv * strat_area,
       weight_strata_conv = (weight_km2_conv / 1000) * strat_area,
-      weight_strata_unconv = (weight_km2_unconv / 1000) * strat_area,
-      .groups="drop"
+      weight_strata_unconv = (weight_km2_unconv / 1000) * strat_area
     ) # convert to kg
 
   if (summary == "lf") {
@@ -244,7 +246,7 @@ if(age.based==FALSE){
   
 } else if (age.based==TRUE){
   
-  alk_calc <- agelengthkey() |> filter(year%in%detail_combined2$year)
+  alk_calc <- agelengthkey(cxn = channel, login = login, computer = computer, season_select=season, type_select=type) |> dplyr::filter(year%in%detail_combined2$year)
   
   # Do per-stratum calculations by age
   per_age_stratum <-
@@ -256,11 +258,12 @@ if(age.based==FALSE){
       clen_conv = ((clen * conversion) * ratio), 
       clen_unconv = (clen * ratio), 
       cwt_conv = (clen_conv * weight_ab), 
-      cwt_unconv = (clen_unconv * weight_ab) 
+      cwt_unconv = (clen_unconv * weight_ab),
+      flen_bin = round((flen - 1) / 3) * 3 + 1
     ) |>
     #N's script start
     dplyr::left_join(
-      alk_caira |>   mutate(
+      alk_calc |> dplyr::mutate(
         season=stringr::str_to_lower(season)
       ),
       by = c("year","season","flen_bin"),
@@ -338,7 +341,7 @@ if(age.based==FALSE){
           relationship = "many-to-many"
         ) |>
         dplyr::filter(
-          SEASON %in% stringr::str_to_upper(season_select),
+          SEASON %in% stringr::str_to_upper(season),
           TYPE %in% type
         ) |>
         dplyr::mutate(
@@ -389,8 +392,8 @@ if(age.based==FALSE){
     
     dplyr::left_join(
       GSSTRATUM |>
-        select(STRAT, AREA) |>
-        rename(strat_area = AREA) |>
+        dplyr::select(STRAT, AREA) |>
+        dplyr::rename(strat_area = AREA) |>
         janitor::clean_names(),
       by = "strat"
     ) |>
