@@ -62,7 +62,7 @@ data_filtered <-  GSDET |>
 alk_long <- data_filtered |> 
   dplyr::mutate(flen_bin = round((flen - 1) / 3) * 3 + 1) |> 
   dplyr::group_by(spec, year,season,flen_bin,age) |> 
-    count() |> 
+    dplyr::count() |> 
   dplyr::group_by(spec,year,season,flen_bin) |> 
   dplyr::mutate(prop=n/sum(n))
 
