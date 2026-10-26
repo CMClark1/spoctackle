@@ -21,34 +21,48 @@ agelengthkey <- function(species = 10,
                          year_end = as.integer(format(Sys.Date(), "%Y")), 
                          type_select = 1, 
                          localdir = "C:\\DFO-MPO\\PESDData\\", 
-                         cxn = channel){
+                         cxn = NULL,
+                         login = NULL,
+                         computer = NULL){
 
   # This checks that you have the necessary data present in your localdir
   
-  file_list <- fs::dir_ls(localdir)
+  required_files <- c("GROUNDFISH.GSDET.RData", "GROUNDFISH.GSMISSIONS.RData", "GROUNDFISH.GSINF.RData")
   
-  required_files <- c("GROUNDFISH.GSDET.RData", "GROUNDFISH.GSMISSIONS.RData")
+  files_present <- spoctackle::check_files_in_folder(
+    localdir,
+    required_files
+  )
   
-  if (spoctackle::check_files_in_folder(localdir, required_files) == FALSE) {
+  if (isFALSE(files_present)) {
+    
     library(Mar.utils)
+    
     Mar.utils::get_data_tables(
       schema = "GROUNDFISH",
-      tables = c("GSCAT","GSDET","GSINF","GSMISSIONS","GSSPECIES","GSSTRATUM","GSXTYPE"),
+      tables = c("GSDET","GSMISSIONS","GSINF"),
       cxn = cxn,
       data.dir = localdir)
-  } else if (spoctackle::check_files_in_folder(localdir, required_files) == TRUE) {
-    files <- list.files(
-      path = localdir,
-      pattern = "^GROUNDFISH.*\\.(RData|rda)$",
-      full.names = TRUE
-    )
-  } else if (!spoctackle::check_files_in_folder(localdir, required_files) %in% c(TRUE, FALSE)) {
+    
+  } else if (isTRUE(files_present)) {
+    
+    library(Mar.utils)
+    
+    for (i in required_files) {
+      Mar.utils::load_encrypted(
+        file.path(localdir, i),
+        extract_user = login,
+        extract_computer = computer
+      )
+    }
+    
+  } else {
     print("Unable to check if required files are present.")
   }
 
   #Join the dataframes and do all the filtering based on user input
 data_filtered <-  GSDET |> 
-    dplyr::left_join(GSMISSIONS) |> 
+    dplyr::left_join(GSMISSIONS, by = "MISSION") |> 
     dplyr::left_join(GSINF |> dplyr::select(MISSION,SETNO,TYPE,STRAT)) |> 
     janitor::clean_names() |> 
     dplyr::filter(stringr::str_to_lower(season)%in%season_select &
