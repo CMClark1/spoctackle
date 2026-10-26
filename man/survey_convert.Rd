@@ -15,7 +15,10 @@ survey_convert(
   equivalent = "cartier",
   ab = "survey",
   localdir = "C:\\\\DFO-MPO\\\\PESDData\\\\",
-  cxn = channel
+  cxn = NULL,
+  login = NULL,
+  computer = NULL,
+  age.based = FALSE
 )
 }
 \arguments{
@@ -40,6 +43,10 @@ survey_convert(
 \item{localdir}{A file path for a local directory where Mar.utils::get_data_tables stores copies of data tables. Temporarily, you need the file result_conversion.RData in that directory if you want to do spring conversions.}
 
 \item{cxn}{A valid Oracle connection object.}
+
+\item{login}{Your computer login.}
+
+\item{computer}{Your computer name.}
 }
 \value{
 Dataframe of species, length, from vessel, to vessel (vessel equivalent) and conversion factor.

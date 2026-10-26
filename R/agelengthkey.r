@@ -1,6 +1,8 @@
 #' Recreate Age Length Key tab from STRANAL in long format
 #'
 #' @param cxn  A valid Oracle connection object. 
+#' @param login Your computer login.
+#' @param computer Your computer name.
 #' @param species The species codes you want to include. You can include one or multiple concatenated. Default is cod 10.
 #' @param season_select The season of the survey. Default is summer.
 #' @param stratum The selected stratum. Default is 4X.
