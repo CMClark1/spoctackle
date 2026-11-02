@@ -25,12 +25,12 @@ tidy_conversions <- function(cxn = NULL,
 
     conversion_nedtel <- conversion |>
       dplyr::filter(from_vessel == "NED_TEM" & to_vessel == "TEL_VEN") |>
-      dplyr::select(spec, flen, cf_value) %>%
+      dplyr::select(spec, flen, cf_value) |> 
       dplyr::rename("cf_value_ned_to_tel" = "cf_value")
 
     conversion_telcar <- conversion |>
       dplyr::filter(from_vessel == "TEL_VEN" & to_vessel == "CAR_CAB") |>
-      dplyr::select(spec, flen, cf_value) %>%
+      dplyr::select(spec, flen, cf_value) |>
       dplyr::rename("cf_value_tel_to_car" = "cf_value")
 
     conversion_atcham <- base::data.frame(spec = c(11, 40, 41, 42, 43), cf_value_atcham_to_ned = c(1.2, 0.8, 0.8, 0.8, 0.8))
@@ -65,9 +65,9 @@ tidy_conversions <- function(cxn = NULL,
       ) |>
       dplyr::select(-cf_value_tel_to_car, -cf_value_ned_to_tel)
 
-    joined_needler <- plyr::join_all(base::list(atcham_needler, teleost_needler, cartier_needler), by = c("vesel", "spec", "flen"), type = "full") %>%
-      base::replace(base::is.na(.), 1) |>
-      dplyr::mutate(
+    joined_needler <- plyr::join_all(base::list(atcham_needler, teleost_needler, cartier_needler), by = c("vesel", "spec", "flen"), type = "full")
+    joined_needler[is.na(joined_needler)] <- 1
+    joined_needler <- joined_needler |> dplyr::mutate(
         conversion = 1 / (cf_value_atcham_to_ned * cf_value_tel_to_ned * cf_value_car_to_tel),
         vesseleq = "needler"
       )
@@ -95,8 +95,9 @@ tidy_conversions <- function(cxn = NULL,
       ) |>
       dplyr::select(-cf_value_tel_to_car)
 
-    joined_teleost <- plyr::join_all(list(atcham_teleost, needler_teleost, cartier_teleost), by = c("vesel", "spec", "flen"), type = "full") %>%
-      base::replace(is.na(.), 1) |>
+    joined_teleost <- plyr::join_all(list(atcham_teleost, needler_teleost, cartier_teleost), by = c("vesel", "spec", "flen"), type = "full")
+    joined_teleost[is.na(joined_teleost)] <- 1
+    joined_teleost <- joined_teleost |> 
       dplyr::mutate(
         conversion = 1 / (cf_value_atcham_to_ned * cf_value_ned_to_tel * cf_value_car_to_tel),
         vesseleq = "teleost"
@@ -125,8 +126,9 @@ tidy_conversions <- function(cxn = NULL,
       dplyr::bind_rows(conversion_telcar) |>
       dplyr::mutate(vesel = base::rep(c("S", "V"), each = base::nrow(conversion_telcar)))
 
-    joined_cartier <- plyr::join_all(list(atcham_cartier, needler_cartier, teleost_cartier), by = c("vesel", "spec", "flen"), type = "full") %>%
-      base::replace(is.na(.), 1) |>
+    joined_cartier <- plyr::join_all(list(atcham_cartier, needler_cartier, teleost_cartier), by = c("vesel", "spec", "flen"), type = "full")
+    joined_cartier[is.na(joined_cartier)] <- 1
+    joined_cartier <- joined_cartier |> 
       dplyr::mutate(
         conversion = 1 / (cf_value_atcham_to_ned * cf_value_ned_to_tel * cf_value_tel_to_car),
         vesseleq = "cartier"
@@ -158,7 +160,7 @@ tidy_conversions <- function(cxn = NULL,
 
     conversion_telcar <- conversion |>
       dplyr::filter(from_vessel == "TEL_VEN" & to_vessel == "CAR_CAB") |>
-      dplyr::select(spec, flen, cf_value) %>%
+      dplyr::select(spec, flen, cf_value) |>
       dplyr::rename("cf_value_tel_to_car" = "cf_value")
 
     # Needler/Templeman/Teleost/Venturer to Cartier/Cabot
