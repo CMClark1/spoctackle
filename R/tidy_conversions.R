@@ -17,7 +17,8 @@ tidy_conversions <- function(cxn = NULL,
                              localdir = "C:\\DFO-MPO\\PESDData\\") {
   
   if (stringr::str_to_lower(season) == "summer") {
-    gsconversions <- ROracle::dbGetQuery(cxn, paste("select * from groundfish.gsconversions")) |> janitor::clean_names()
+    gsconversions <- ROracle::dbGetQuery(cxn, paste("select * from groundfish.gsconversions
+                                                    where season = 'SUMMER'")) |> janitor::clean_names()
 
     conversion <- gsconversions |>
       dplyr::filter(spec %in% species & season == season)
